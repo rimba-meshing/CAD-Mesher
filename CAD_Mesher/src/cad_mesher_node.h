@@ -5,6 +5,7 @@
 #include "cell.h"
 #include "map.h"
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <std_msgs/Header.h>
 #include <pcl/registration/icp.h>
 class Parameter{
     //algorithm parameter
@@ -156,7 +157,7 @@ public:
     Log & g_data;//initialize global variables
     ros::NodeHandle & nh;
 
-    ros::Publisher odom_pub,
+    ros::Publisher odom_pub, scan_processed_pub,
     map_vertices_glb_pub, map_vertices_now_pub, raw_points_in_world_pub, overlap_point_glb, overlap_point_now,
     pose_pub, pose_imu_pub, path_pub, path_odom_pub, path_grt_pub,
     mesh_pub , mesh_pub_local, mesh_voxblox_pub,
@@ -184,6 +185,7 @@ public:
     bool visualize(Map & map_glb, Map & map_now, int option);
     void map2odomUpdate();
     void pubTf();
+    void publishScanProcessed();
     CAD_Mesher(ros::NodeHandle & nh_, Parameter & param_, Log & g_data_);
     ~CAD_Mesher();
     void process();

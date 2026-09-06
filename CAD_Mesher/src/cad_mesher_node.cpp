@@ -799,8 +799,13 @@ void CAD_Mesher::pubTf(){
                     <<  std::setprecision(9) << odom_msg.pose.pose.position.x << " " << odom_msg.pose.pose.position.y 
                     << " " << odom_msg.pose.pose.position.z << " " 
 				    << odom_msg.pose.pose.orientation.x << " " << odom_msg.pose.pose.orientation.y << " " 
-                    << odom_msg.pose.pose.orientation.z << " " << odom_msg.pose.pose.orientation.w << std::endl;
+				    << odom_msg.pose.pose.orientation.z << " " << odom_msg.pose.pose.orientation.w << std::endl;
 
+}
+
+void CAD_Mesher::publishScanProcessed(){
+    std_msgs::Header processed_header = g_data.pcl_msg_buff.header;
+    scan_processed_pub.publish(processed_header);
 }
 
 //Compute Spaciousness of Current Scan
@@ -1084,6 +1089,9 @@ void CAD_Mesher::process(){
                     // g_data.odometry_msg_buf.pop_front();
                     // g_data.pcl_msg_buff_deque.pop_front();
                     // mBuf.unlock();
+                    // The scan was consumed but intentionally not selected as
+                    // a keyframe.  A separate replay ACK must cover this case.
+                    publishScanProcessed();
                     break;
                 }
             } 
@@ -1131,6 +1139,7 @@ void CAD_Mesher::process(){
             std::cout<<"t_update        : "<<g_data.time_update(0, g_data.step) << "ms"<< std::endl;
             std::cout<<"t_draw_map      : "<<g_data.time_cost_draw_map(0, g_data.step) << "ms"<< std::endl;
             std::cout<<"===STEP "<<g_data.step<<"===Time used: "<< g_data.time_cost(0, g_data.step) <<" ms==="<< std::endl;
+            publishScanProcessed();
         }
         if(abort_){
             //some final process, such as report
@@ -1152,6 +1161,7 @@ void CAD_Mesher::process(){
 
 CAD_Mesher::CAD_Mesher(ros::NodeHandle & nh_, Parameter & param_, Log & g_data_) : nh(nh_), param(param_), g_data(g_data_){
     odom_pub = nh.advertise<nav_msgs::Odometry>("/cad_mesher/lidar_odometry_low_frequency", 1);
+    scan_processed_pub = nh.advertise<std_msgs::Header>("/cad_mesher/scan_processed", 10);
 
     map_vertices_glb_pub = nh.advertise<sensor_msgs::PointCloud>("/cad_mesher/map_vertices_global", 1);
     map_vertices_now_pub = nh.advertise<sensor_msgs::PointCloud>("/cad_mesher/map_vertices_now", 1);
